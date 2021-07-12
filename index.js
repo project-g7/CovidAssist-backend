@@ -30,6 +30,14 @@ app.get("/api/VaccineCenter", (req, res) => {
   });
 });
 
+app.get("/api/VaccineName", (req, res) => {
+  const sqlSelect =
+    "SELECT vaccine.vaccine_name FROM covidAssist.vaccine_center_vaccine INNER JOIN  covidAssist.vaccine ON vaccine_center_vaccine.vaccine_id = vaccine.vaccine_id INNER JOIN  covidAssist.vaccine_center ON vaccine_center_vaccine.vaccine_center_id=vaccine_center.center_id WHERE vaccine_center_vaccine.quantity > 0";
+  db.query(sqlSelect, (err, result) => {
+    res.send(result);
+  });
+});
+
 app.post("/api/insert", (req, res) => {
   const firstName = req.body.firstName;
   const lastName = req.body.lastName;
