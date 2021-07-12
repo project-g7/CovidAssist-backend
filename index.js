@@ -80,7 +80,17 @@ app.post("/api/insert", (req, res) => {
   const tracingKey = '1556';
   const contactTracingStatus = '0';
   const hash = crypto.createHash('md5').update(password).digest('hex');
-  const sqlInsert =
+
+
+  db.query(
+    'SELECT user_name FROM mobile_user WHERE user_name=?',
+    [userName],
+    (error, result, feilds) => {
+      console.log(result);
+      if (result.length > 0) {
+        res.send('wrong');
+      } else {
+        const sqlInsert =
     "INSERT INTO mobile_user(first_name,last_name,nic,address,email,gender,contact_number,user_name,password,tracing_key,contact_tracing_status) VALUES(?,?,?,?,?,?,?,?,?,?,?)";
   db.query(
     sqlInsert,
@@ -107,9 +117,18 @@ app.post("/api/insert", (req, res) => {
     //     lastName,
     //   ],
     (err, result) => {
+      res.send('Success');
       console.log(err);
+      res.send(result);
+
     }
   );
+      }
+    },
+  );
+
+
+  
 });
 
 
