@@ -3,6 +3,7 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const app = express();
 const mysql = require('mysql');
+const crypto = require('crypto');
 
 const db = mysql.createPool({
   host: 'database-1.ctdegncxgy0s.us-east-2.rds.amazonaws.com',
@@ -22,6 +23,33 @@ app.get('/api/get', (req, res) => {
   });
 });
 
+app.post('/api/login', async (req, res) => {
+  try {
+    const userName = req.body.userName;
+    const password = req.body.password;
+    const hashpass = crypto.createHash('md5').update(password).digest('hex');
+
+    db.query(
+      'SELECT password FROM mobile_user WHERE user_name=? AND password=?',
+      [userName, hashpass],
+      (error, result, feilds) => {
+        console.log(result);
+        if (result.length > 0) {
+          console.log('correct');
+          res.send(result);
+        } else {
+          console.log('Invalid');
+          // alert(invalid);
+          res.send('wrong');
+        }
+      },
+    );
+  } catch (e) {
+    console.log(e);
+    res.status(500).send('Something broke!');
+  }
+});
+
 app.post('/api/insert', (req, res) => {
   const firstName = req.body.firstName;
   const lastName = req.body.lastName;
@@ -31,11 +59,12 @@ app.post('/api/insert', (req, res) => {
   const password = req.body.password;
   const email = req.body.email;
   // const mobileUserId = '';
-  const address = 'diyagama';
+  const address = req.body.address;
   const gender = 'male';
   const tracingKey = '1556';
   const contactTracingStatus = '0';
-
+  const hash = crypto.createHash('md5').update(password).digest('hex');
+  
   const sqlInsert =
     'INSERT INTO mobile_user(first_name,last_name,nic,address,email,gender,contact_number,user_name,password,tracing_key,contact_tracing_status) VALUES(?,?,?,?,?,?,?,?,?,?,?)';
   db.query(
