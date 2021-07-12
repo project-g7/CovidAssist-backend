@@ -112,6 +112,42 @@ app.post("/api/insert", (req, res) => {
   );
 });
 
+
+
+
+
+
+app.put("/api/editprofile",(req,res) => {
+
+    const firstName = req.body.firstName;
+    const lastName = req.body.lastName;
+    const nic = req.body.nic;
+    const contactNumber = req.body.contactNumber;
+    const email = req.body.email;
+    const username = req.body.username;
+    console.log(firstName);
+    // const sqlUpdate = "Update mobile_user SET first_name = '{$fie}', last_name = '{$lastName}', nic='{$nic}', contact_number= '{$contactNumber}', email='{$email}', user_name='{$username}' WHERE mobile_user_id = 1;"
+    const sqlUpdate = 'Update mobile_user SET first_name = ?, last_name = ?, nic= ?, contact_number= ?, email= ?, user_name= ? WHERE mobile_user_id = 1;'
+    db.query(sqlUpdate,[firstName,lastName,nic,contactNumber,email,username],(err,result) => {
+    // res.send("hello");
+    // console.log(result);
+    res.send(err)
+   });
+})
+
+app.get('/api/users',(req,res)=>{
+    // console.log(req.get(username));
+    console.log(req.query.username);
+    const username = req.query.username;
+    db.query('SELECT * FROM mobile_user WHERE user_name = ?;',[username],(error,result,feilds) => {
+        if(error) console.log(error);
+        else{
+            console.log(result);
+            res.send(result);
+        }
+    })
+})
+
 app.listen(3001, () => {
   console.log("running on port 3001");
 });
