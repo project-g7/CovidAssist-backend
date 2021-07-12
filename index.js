@@ -146,7 +146,7 @@ app.put("/api/editprofile",(req,res) => {
     const username = req.body.username;
     console.log(firstName);
     // const sqlUpdate = "Update mobile_user SET first_name = '{$fie}', last_name = '{$lastName}', nic='{$nic}', contact_number= '{$contactNumber}', email='{$email}', user_name='{$username}' WHERE mobile_user_id = 1;"
-    const sqlUpdate = 'Update mobile_user SET first_name = ?, last_name = ?, nic= ?, contact_number= ?, email= ?, user_name= ? WHERE mobile_user_id = 1;'
+    const sqlUpdate = 'Update mobile_user SET first_name = ?, last_name = ?, nic= ?, contact_number= ?, email= ? WHERE user_name = ?;'
     db.query(sqlUpdate,[firstName,lastName,nic,contactNumber,email,username],(err,result) => {
     // res.send("hello");
     // console.log(result);
