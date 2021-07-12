@@ -76,7 +76,7 @@ app.post("/api/insert", (req, res) => {
   const email = req.body.email;
   // const mobileUserId = '';
   const address = req.body.address;
-  const gender = 'male';
+  const gender = req.body.Gender;
   const tracingKey = '1556';
   const contactTracingStatus = '0';
   const hash = crypto.createHash('md5').update(password).digest('hex');
@@ -94,7 +94,7 @@ app.post("/api/insert", (req, res) => {
       gender,
       contactNumber,
       userName,
-      password,
+      hash,
       tracingKey,
       contactTracingStatus,
     ],
