@@ -76,38 +76,53 @@ app.post("/api/insert", (req, res) => {
   const email = req.body.email;
   // const mobileUserId = '';
   const address = req.body.address;
-  const gender = "male";
+
+  const gender = req.body.Gender;
   const tracingKey = "1556";
   const contactTracingStatus = "0";
   const hash = crypto.createHash("md5").update(password).digest("hex");
-  const sqlInsert =
-    "INSERT INTO mobile_user(first_name,last_name,nic,address,email,gender,contact_number,user_name,password,tracing_key,contact_tracing_status) VALUES(?,?,?,?,?,?,?,?,?,?,?)";
+
   db.query(
-    sqlInsert,
-    [
-      // mobileUserId,
-      firstName,
-      lastName,
-      nic,
-      address,
-      email,
-      gender,
-      contactNumber,
-      userName,
-      password,
-      tracingKey,
-      contactTracingStatus,
-    ],
-    //   'INSERT INTO test_table(id,test_num,test_text) VALUES(?,?,?)';
-    // db.query(
-    //   sqlInsert,
-    //   [
-    //     mobileUserId,
-    //     tracingKey,
-    //     lastName,
-    //   ],
-    (err, result) => {
-      console.log(err);
+    "SELECT user_name FROM mobile_user WHERE user_name=?",
+    [userName],
+    (error, result, feilds) => {
+      console.log(result);
+      if (result.length > 0) {
+        res.send("wrong");
+      } else {
+        const sqlInsert =
+          "INSERT INTO mobile_user(first_name,last_name,nic,address,email,gender,contact_number,user_name,password,tracing_key,contact_tracing_status) VALUES(?,?,?,?,?,?,?,?,?,?,?)";
+        db.query(
+          sqlInsert,
+          [
+            // mobileUserId,
+            firstName,
+            lastName,
+            nic,
+            address,
+            email,
+            gender,
+            contactNumber,
+            userName,
+            hash,
+            tracingKey,
+            contactTracingStatus,
+          ],
+          //   'INSERT INTO test_table(id,test_num,test_text) VALUES(?,?,?)';
+          // db.query(
+          //   sqlInsert,
+          //   [
+          //     mobileUserId,
+          //     tracingKey,
+          //     lastName,
+          //   ],
+          (err, result) => {
+            res.send("Success");
+            console.log(err);
+            res.send(result);
+          }
+        );
+      }
     }
   );
 });
@@ -123,6 +138,28 @@ app.put("/api/editprofile", (req, res) => {
   // const sqlUpdate = "Update mobile_user SET first_name = '{$fie}', last_name = '{$lastName}', nic='{$nic}', contact_number= '{$contactNumber}', email='{$email}', user_name='{$username}' WHERE mobile_user_id = 1;"
   const sqlUpdate =
     "Update mobile_user SET first_name = ?, last_name = ?, nic= ?, contact_number= ?, email= ?, user_name= ? WHERE mobile_user_id = 1;";
+  db.query(
+    sqlUpdate,
+    [firstName, lastName, nic, contactNumber, email, username],
+    (err, result) => {
+      // res.send("hello");
+      // console.log(result);
+      res.send(err);
+    }
+  );
+});
+
+app.put("/api/editprofile", (req, res) => {
+  const firstName = req.body.firstName;
+  const lastName = req.body.lastName;
+  const nic = req.body.nic;
+  const contactNumber = req.body.contactNumber;
+  const email = req.body.email;
+  const username = req.body.username;
+  console.log(firstName);
+  // const sqlUpdate = "Update mobile_user SET first_name = '{$fie}', last_name = '{$lastName}', nic='{$nic}', contact_number= '{$contactNumber}', email='{$email}', user_name='{$username}' WHERE mobile_user_id = 1;"
+  const sqlUpdate =
+    "Update mobile_user SET first_name = ?, last_name = ?, nic= ?, contact_number= ?, email= ? WHERE user_name = ?;";
   db.query(
     sqlUpdate,
     [firstName, lastName, nic, contactNumber, email, username],
