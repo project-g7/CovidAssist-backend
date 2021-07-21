@@ -68,6 +68,7 @@ app.get("/api/VaccineName", (req, res) => {
 });
 
 app.post("/api/insert", (req, res) => {
+  console.log("aaaa");
   const firstName = req.body.firstName;
   const lastName = req.body.lastName;
   const nic = req.body.nic;
