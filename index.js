@@ -52,7 +52,8 @@ app.post("/api/login", async (req, res) => {
 
 // get vaccine centers(reshani)
 app.get("/api/VaccineCenter", (req, res) => {
-  const sqlSelect = "SELECT name FROM vaccine_center";
+  const sqlSelect =
+    "SELECT covidAssist.vaccine_center.name ,covidAssist.vaccine.vaccine_name,covidAssist.vaccine_center.center_id FROM covidAssist.vaccine_center INNER JOIN covidAssist.vaccine_center_vaccine ON covidAssist.vaccine_center.center_id=covidAssist.vaccine_center_vaccine.vaccine_center_id  Inner JOIN covidAssist.vaccine ON covidAssist.vaccine_center_vaccine.vaccine_id=covidAssist.vaccine.vaccine_id WHERE covidAssist.vaccine_center_vaccine.quantity>0";
   db.query(sqlSelect, (err, result) => {
     res.send(result);
   });
