@@ -190,6 +190,6 @@ app.get("/api/users", (req, res) => {
   );
 });
 
-app.listen(3001, () => {
+app.listen(3002, () => {
   console.log("running on port 3001");
 });
