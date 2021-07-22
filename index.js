@@ -25,6 +25,7 @@ app.get("/api/get", (req, res) => {
 
 app.post("/api/login", async (req, res) => {
   try {
+    console.log("loginnn");
     const userName = req.body.userName;
     const password = req.body.password;
     const hashpass = crypto.createHash("md5").update(password).digest("hex");
