@@ -81,7 +81,7 @@ app.post("/api/insert", (req, res) => {
   const address = req.body.address;
 
   const gender = req.body.Gender;
-  const tracingKey = "1556";
+  const tracingKey = req.body.tracingKey;
   const contactTracingStatus = "0";
   const hash = crypto.createHash("md5").update(password).digest("hex");
 
@@ -122,7 +122,7 @@ app.post("/api/insert", (req, res) => {
           (err, result) => {
             res.send("Success");
             console.log(err);
-            res.send(result);
+            // res.send(result);
           }
         );
       }
@@ -191,6 +191,22 @@ app.get("/api/users", (req, res) => {
   );
 });
 
+app.get("/api/tracingkey",(req,res) => {
+  console.log(req.query.username+"ss");
+  const username = req.query.username;
+  db.query(
+    "SELECT tracing_key FROM mobile_user WHERE user_name = ?;",
+    [username],
+    (error, result, feilds) => {
+      if (error) console.log(error);
+      else {
+        console.log(result);
+        res.send(result);
+      }
+    }
+  );
+})
+
 app.listen(3000, () => {
-  console.log("running on port 3001");
+  console.log("running on port 3000");
 });
