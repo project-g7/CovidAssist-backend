@@ -53,7 +53,7 @@ app.post("/api/login", async (req, res) => {
 // get vaccine centers(reshani)
 app.get("/api/VaccineCenter", (req, res) => {
   const sqlSelect =
-    "SELECT covidAssist.vaccine_center.name ,covidAssist.vaccine.vaccine_name,covidAssist.vaccine_center.center_id FROM covidAssist.vaccine_center INNER JOIN covidAssist.vaccine_center_vaccine ON covidAssist.vaccine_center.center_id=covidAssist.vaccine_center_vaccine.vaccine_center_id  Inner JOIN covidAssist.vaccine ON covidAssist.vaccine_center_vaccine.vaccine_id=covidAssist.vaccine.vaccine_id WHERE covidAssist.vaccine_center_vaccine.quantity>0";
+    "SELECT covidAssist.vaccine_center.name ,covidAssist.vaccine.vaccine_name,covidAssist.vaccine_center.center_id FROM covidAssist.vaccine_center INNER JOIN covidAssist.vaccine_center_vaccine ON covidAssist.vaccine_center.center_id=covidAssist.vaccine_center_vaccine.vaccine_center_id  Inner JOIN covidAssist.vaccine ON covidAssist.vaccine_center_vaccine.vaccine_id=covidAssist.vaccine.vaccine_id WHERE covidAssist.vaccine_center_vaccine.dose_1_quantity>0 OR covidAssist.vaccine_center_vaccine.dose_2_quantity>0 OR covidAssist.vaccine_center_vaccine.dose_3_quantity>0";
   db.query(sqlSelect, (err, result) => {
     res.send(result);
   });
@@ -190,6 +190,6 @@ app.get("/api/users", (req, res) => {
   );
 });
 
-app.listen(3001, () => {
-  console.log("running on port 3001");
+app.listen(3000, () => {
+  console.log("running on port 3000");
 });
