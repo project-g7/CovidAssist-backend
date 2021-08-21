@@ -207,6 +207,59 @@ app.get("/api/tracingkey", (req, res) => {
   );
 });
 
+app.get("/api/VaccineCenterDistrict", (req, res) => {
+  console.log(req.query.username);
+  const username = req.query.username;
+  db.query(
+    "SELECT nic FROM mobile_user WHERE user_name = ?;",
+    [username],
+    (error, result, feilds) => {
+      if (error) console.log(error);
+      else {
+        console.log(result[0].nic);
+        // res.send(result);
+        let nic = result[0].nic;
+        db.query(
+          "SELECT district FROM user_details WHERE nic=?;",
+          [nic],
+          (errorNic, resultNic, fieldsNic) => {
+            if (errorNic) console.log(errorNic);
+            else {
+              console.log(resultNic[0].district);
+              let district = resultNic[0].district;
+              db.query(
+                "SELECT covidAssist.vaccine_center.name ,covidAssist.vaccine.vaccine_name,covidAssist.vaccine_center.center_id FROM covidAssist.vaccine_center INNER JOIN covidAssist.vaccine_center_vaccine ON covidAssist.vaccine_center.center_id=covidAssist.vaccine_center_vaccine.vaccine_center_id  Inner JOIN covidAssist.vaccine ON covidAssist.vaccine_center_vaccine.vaccine_id=covidAssist.vaccine.vaccine_id WHERE covidAssist.vaccine_center.district=? AND (covidAssist.vaccine_center_vaccine.dose_1_quantity>0 OR covidAssist.vaccine_center_vaccine.dose_2_quantity>0 OR covidAssist.vaccine_center_vaccine.dose_3_quantity>0)",
+                [district],
+                (errorDistrict, resultDistrict, fieldsDistrict) => {
+                  if (errorDistrict) console.log(errorDistrict);
+                  else {
+                    console.log(resultDistrict);
+                    res.send(resultDistrict);
+                  }
+                }
+              );
+            }
+          }
+        );
+      }
+    }
+  );
+});
+app.get("api/VaccineSelecteDate", (req, res) => {
+  console.log(req.query.dateselect);
+  const dateselect = req.query.dateselect;
+  // db.query(
+  //   "SELECT tracing_key FROM mobile_user WHERE user_name = ?;",
+  //   [username],
+  //   (error, result, feilds) => {
+  //     if (error) console.log(error);
+  //     else {
+  //       console.log(result);
+  //       res.send(result);
+  //     }
+  //   }
+  // );
+});
 app.listen(3000, () => {
   console.log("running on port 3000");
 });
