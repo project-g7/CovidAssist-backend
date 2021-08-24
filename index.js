@@ -207,6 +207,7 @@ app.get("/api/tracingkey", (req, res) => {
   );
 });
 
+//reshani
 app.get("/api/VaccineCenterDistrict", (req, res) => {
   console.log(req.query.username);
   const username = req.query.username;
@@ -246,8 +247,9 @@ app.get("/api/VaccineCenterDistrict", (req, res) => {
   );
 });
 app.get("api/VaccineSelecteDate", (req, res) => {
-  console.log(req.query.dateselect);
-  const dateselect = req.query.dateselect;
+  //console.log("aaaaa");
+  console.log(req.query.date);
+  const dateselect = req.query.date;
   // db.query(
   //   "SELECT tracing_key FROM mobile_user WHERE user_name = ?;",
   //   [username],
