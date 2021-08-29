@@ -207,7 +207,7 @@ app.get("/api/tracingkey", (req, res) => {
   );
 });
 
-//reshani
+//reshani select vaccine center and vaccine
 app.get("/api/VaccineCenterDistrict", (req, res) => {
   console.log(req.query.username);
   const username = req.query.username;
@@ -246,21 +246,148 @@ app.get("/api/VaccineCenterDistrict", (req, res) => {
     }
   );
 });
-app.get("api/VaccineSelecteDate", (req, res) => {
+// reshani select available time
+app.get("/api/VaccineSelecteDate", (req, res) => {
   //console.log("aaaaa");
   console.log(req.query.date);
-  const dateselect = req.query.date;
-  // db.query(
-  //   "SELECT tracing_key FROM mobile_user WHERE user_name = ?;",
-  //   [username],
-  //   (error, result, feilds) => {
-  //     if (error) console.log(error);
-  //     else {
-  //       console.log(result);
-  //       res.send(result);
-  //     }
-  //   }
-  // );
+  console.log(req.query.vaccineCenter);
+  const selecteddate = req.query.date;
+  const selectedCenter = req.query.vaccineCenter;
+  db.query(
+    "SELECT * FROM vaccine_center WHERE (start_date <= ? AND end_date >= ?) AND name=? ",
+    [selecteddate, selecteddate, selectedCenter],
+    (error, result, fields) => {
+      if (error) {
+        console.log(error);
+        res.send("This Center is not available");
+      } else {
+        console.log(result);
+        db.query(
+          "SELECT center_id FROM vaccine_center WHERE name = ?",
+          [selectedCenter],
+          (errorCenter, resultCenter) => {
+            if (errorCenter) {
+              console.log(errorCenter);
+            } else {
+              console.log(resultCenter);
+              let center = resultCenter[0].center_id;
+              console.log(center);
+              db.query(
+                "SELECT `8.00-10.00` AS time1,`10.00-12.00`AS time2,`1.00-3.00`AS time3,`3.00-5.00`AS time4 FROM available_time WHERE date=? AND center_id =?",
+                [selecteddate, center],
+                (errorTime, resultTime, fieldsTime) => {
+                  if (error) {
+                    console.log(errorTime);
+                    res.send("Not available time");
+                  } else {
+                    console.log(resultTime);
+                    // let times1 = resultTime[0].time1;
+                    // let times2 = resultTime[0].time2;
+                    // let times3 = resultTime[0].time3;
+                    // let times4 = resultTime[0].time4;
+                    // if (times1 > 50) {
+                    //   console.log(times1);
+                    // } else {
+                    //   res.send(times1);
+                    //   console.log(times1);
+                    // }
+
+                    // if (times2 > 50) {
+                    //   console.log(times2);
+                    // } else {
+                    //   res.send(times2);
+                    //   console.log(times2);
+                    // }
+
+                    // if (times3 > 50) {
+                    //   console.log(times3);
+                    // } else {
+                    //   res.send(times3);
+                    //   console.log(times3);
+                    // }
+
+                    // if (times4 > 50) {
+                    //   console.log(times4);
+                    // } else {
+                    //   res.send(times4);
+                    //   console.log(times4);
+                    // }
+                    let times = resultTime.filter(function (item) {
+                      return (
+                        item.time1 < 50 ||
+                        item.time2 < 50 ||
+                        item.time3 < 50 ||
+                        item.time4 < 50
+                      );
+                    });
+                    console.log(times);
+                  }
+                }
+              );
+            }
+          }
+        );
+      }
+    }
+  );
+});
+// reshani vaccine registration
+app.post("/api/VaccineRegister", (req, res) => {
+  console.log("registervaccine");
+  console.log(req.body.username);
+  console.log(req.body.vaccineCenter);
+  // console.log(req.body.vaccineName);
+  //console.log(req.body.vaccineCenter.vaccine_center);
+  console.log(req.body.vaccineName.vaccine_name);
+  const vaccineCenter = req.body.vaccineCenter;
+  const vaccineName = req.body.vaccineName.vaccine_name;
+  const username = req.body.username;
+  db.query(
+    "SELECT mobile_user_id FROM mobile_user WHERE user_name=?",
+    [username],
+    (errorId, resultId, fieldsId) => {
+      if (errorId) console.log(error);
+      else {
+        console.log(resultId[0].mobile_user_id);
+        let userid = resultId[0].mobile_user_id;
+        db.query(
+          "SELECT center_id FROM vaccine_center WHERE name = ?",
+          [vaccineCenter],
+          (error, result, feilds) => {
+            if (error) console.log(error);
+            else {
+              console.log(result[0].center_id);
+              let centerid = result[0].center_id;
+              db.query(
+                "SELECT vaccine_id FROM vaccine WHERE vaccine_name = ?",
+                [vaccineName],
+                (errorVaccineName, resultVaccineName, feildsVaccineName) => {
+                  if (errorVaccineName) console.log(error);
+                  else {
+                    console.log(resultVaccineName[0].vaccine_id);
+                    let vaccineid = resultVaccineName[0].vaccine_id;
+                    const sqlInsert =
+                      "INSERT INTO booking (center_id,vaccine_id,mobile_user_id) VALUES(?,?,?)";
+                    db.query(
+                      sqlInsert,
+                      [centerid, vaccineid, userid],
+                      (err, result) => {
+                        res.send("Success");
+                        console.log(err);
+                        // res.send(result);
+                      }
+                    );
+                  }
+                }
+              );
+            }
+          }
+        );
+      }
+    }
+  );
+
+  // console.log(VaccineCenter);
 });
 app.listen(3000, () => {
   console.log("running on port 3000");
