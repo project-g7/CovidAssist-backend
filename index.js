@@ -260,6 +260,34 @@ app.get("api/VaccineSelecteDate", (req, res) => {
   //   }
   // );
 });
+
+
+app.post("api/dailytracingkey", (req,res) => {
+  const dailyTracingKey = req.body.dailyTracingKey;
+  const userName = req.body.userName;
+  db.query("SELECT mobile_user_id from mobile_user WHERE username=?",
+  [username],
+  (error,result,feilds)=>{
+    if (error) console.log(error);
+    else{
+      console.log(result[0].mobile_user_id);
+      // res.send(result);
+      let id = result[0].mobile_user_id;
+
+      db.query("INSERT INTO mobile_user_daily_tracing_key(mobile_user_id,daily_tracing_key) VALUES(?,?)",
+      [id, dailyTracingKey],
+      (errorDaily,resultDaily,feildsDaily)=>{
+        if (errorDaily) console.log(errorDaily);
+        else{
+          res.send("Success");
+        }
+      })
+    }
+  })
+
+})
+
+
 app.listen(3000, () => {
   console.log("running on port 3000");
 });
