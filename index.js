@@ -281,46 +281,26 @@ app.get("/api/VaccineSelecteDate", (req, res) => {
                     res.send("Not available time");
                   } else {
                     console.log(resultTime);
-                    // let times1 = resultTime[0].time1;
-                    // let times2 = resultTime[0].time2;
-                    // let times3 = resultTime[0].time3;
-                    // let times4 = resultTime[0].time4;
-                    // if (times1 > 50) {
-                    //   console.log(times1);
-                    // } else {
-                    //   res.send(times1);
-                    //   console.log(times1);
-                    // }
-
-                    // if (times2 > 50) {
-                    //   console.log(times2);
-                    // } else {
-                    //   res.send(times2);
-                    //   console.log(times2);
-                    // }
-
-                    // if (times3 > 50) {
-                    //   console.log(times3);
-                    // } else {
-                    //   res.send(times3);
-                    //   console.log(times3);
-                    // }
-
-                    // if (times4 > 50) {
-                    //   console.log(times4);
-                    // } else {
-                    //   res.send(times4);
-                    //   console.log(times4);
-                    // }
-                    let times = resultTime.filter(function (item) {
-                      return (
-                        item.time1 < 50 ||
-                        item.time2 < 50 ||
-                        item.time3 < 50 ||
-                        item.time4 < 50
-                      );
-                    });
-                    console.log(times);
+                    let c = 0;
+                    let arr = [];
+                    try {
+                      for (let [key, val] of Object.entries(resultTime[0])) {
+                        console.log(key, val);
+                        if (val <= 50) {
+                          c = c + 1;
+                        }
+                      }
+                      for (let [key, val] of Object.entries(resultTime[0])) {
+                        console.log(key, val);
+                        if (val < 50) {
+                          arr.push(key);
+                        }
+                      }
+                      console.log(arr);
+                      res.send(arr);
+                    } catch (err) {
+                      console.log(err);
+                    }
                   }
                 }
               );
@@ -390,32 +370,33 @@ app.post("/api/VaccineRegister", (req, res) => {
   // console.log(VaccineCenter);
 });
 
-
-app.post("api/dailytracingkey", (req,res) => {
+app.post("api/dailytracingkey", (req, res) => {
   const dailyTracingKey = req.body.dailyTracingKey;
   const userName = req.body.userName;
-  db.query("SELECT mobile_user_id from mobile_user WHERE username=?",
-  [username],
-  (error,result,feilds)=>{
-    if (error) console.log(error);
-    else{
-      console.log(result[0].mobile_user_id);
-      // res.send(result);
-      let id = result[0].mobile_user_id;
+  db.query(
+    "SELECT mobile_user_id from mobile_user WHERE username=?",
+    [username],
+    (error, result, feilds) => {
+      if (error) console.log(error);
+      else {
+        console.log(result[0].mobile_user_id);
+        // res.send(result);
+        let id = result[0].mobile_user_id;
 
-      db.query("INSERT INTO mobile_user_daily_tracing_key(mobile_user_id,daily_tracing_key) VALUES(?,?)",
-      [id, dailyTracingKey],
-      (errorDaily,resultDaily,feildsDaily)=>{
-        if (errorDaily) console.log(errorDaily);
-        else{
-          res.send("Success");
-        }
-      })
+        db.query(
+          "INSERT INTO mobile_user_daily_tracing_key(mobile_user_id,daily_tracing_key) VALUES(?,?)",
+          [id, dailyTracingKey],
+          (errorDaily, resultDaily, feildsDaily) => {
+            if (errorDaily) console.log(errorDaily);
+            else {
+              res.send("Success");
+            }
+          }
+        );
+      }
     }
-  })
-
-})
-
+  );
+});
 
 app.listen(3000, () => {
   console.log("running on port 3000");
