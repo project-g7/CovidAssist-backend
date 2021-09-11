@@ -6,7 +6,7 @@ const mysql = require("mysql");
 const crypto = require("crypto");
 
 const db = mysql.createPool({
-  host: "database-1.ctdegncxgy0s.us-east-2.rds.amazonaws.com",
+  host: "covid-assist-db.cdbjavxo0vob.us-east-2.rds.amazonaws.com",
   database: "covidAssist",
   user: "admin",
   password: "admin1234",
@@ -397,6 +397,206 @@ app.post("api/dailytracingkey", (req, res) => {
     }
   );
 });
+
+app.get("/api/otherkeys", (req, res) => {
+  console.log(req.query.username);
+  console.log(req.query.uuid);
+  const username = req.query.username;
+  const otherkeys = req.query.uuid;
+  const date = req.query.date;
+  db.query(
+    "SELECT mobile_user_id FROM mobile_user WHERE user_name = ?;",
+    [username],
+    (error, result, feilds) => {
+      if (error) console.log(error);
+      else {
+        console.log(result[0].mobile_user_id);
+        let userId = result[0].mobile_user_id;
+        db.query(
+          "SELECT * FROM mobile_user_rpk WHERE (mobile_user_id = ? AND others_rpk = ? AND date = ?)",
+          [userId, otherkeys, date],
+          (errorkey, resultkey) => {
+            if (errorkey) {
+              console.log(errorkey);
+            } else {
+              console.log("=========");
+              if (resultkey.length > 0) {
+                res.send("Duplicate");
+              } else {
+                db.query(
+                  "INSERT INTO mobile_user_rpk(mobile_user_id,others_rpk,date) VALUES(?,?,?)",
+                  [userId, otherkeys, date],
+                  (errInsert, resInsert) => {
+                    if (errInsert) {
+                      console.log(errInsert);
+                    } else {
+                      console.log("Success");
+                      res.send("Success");
+                    }
+                  }
+                );
+              }
+            }
+          }
+        );
+      }
+    }
+  );
+});
+
+app.get("/api/checkstatus", (req, res) => {
+  const username = req.query.username;
+  db.query(
+    "SELECT contact_tracing_status FROM mobile_user WHERE user_name = ?",
+    [username],
+    (error, result) => {
+      if (error) {
+        console.log(error);
+      } else {
+        console.log(result[0].contact_tracing_status);
+        res.send(result);
+      }
+    }
+  );
+});
+
+app.get("/api/updatestatus", (req, res) => {
+  const username = req.query.username;
+  db.query(
+    "UPDATE mobile_user SET contact_tracing_status = ? WHERE user_name = ?",
+    [0, username],
+    (error, result) => {
+      if (error) {
+        console.log(error);
+      } else {
+        // console.log(result[0]);
+        res.send("Success");
+      }
+    }
+  );
+});
+
+app.get("/api/getbookingsss", (req, res) => {
+  const username = req.query.username;
+  db.query(
+    "SELECT mobile_user_id FROM mobile_user WHERE user_name = ?",
+    [username],
+    (error, result) => {
+      if (error) {
+        console.log(error);
+      } else {
+        console.log(result[0].mobile_user_id);
+        let userId = result[0].mobile_user_id;
+        db.query(
+          "SELECT * FROM booking WHERE mobile_user_id = ?",
+          [userId],
+          (errorBooking, resultBooking) => {
+            if (errorBooking) {
+              console.log(errorBooking);
+            } else {
+              var arr = [];
+              for (let i = 0; i < resultBooking.length; i++) {
+                console.log(resultBooking);
+                let centerId = resultBooking[i].center_id;
+                let vaccineId = resultBooking[i].vaccine_id;
+                db.query(
+                  "SELECT name FROM vaccine_center WHERE center_id = ?",
+                  [centerId],
+                  (errorCenter, resultCenter) => {
+                    if (errorCenter) {
+                    } else {
+                      console.log(resultCenter[0].name);
+                      let centerName = resultCenter[0].name;
+                      db.query(
+                        "SELECT vaccine_name FROM vaccine WHERE vaccine_id = ?",
+                        [vaccineId],
+                        (errorVaccine, resultVaccine) => {
+                          if (errorVaccine) {
+                          } else {
+                            console.log(resultVaccine[0].vaccine_name);
+                            let vaccine = resultVaccine[0].vaccine_name;
+
+                            arr.push({
+                              user_id: userId,
+                              booking_id: resultBooking[i].booking_id,
+                              vaccine_center: centerName,
+                              vaccine: vaccine,
+                              date: resultBooking[i].date,
+                              time: resultBooking[i].time,
+                              dose: resultBooking[i].dose,
+                              status: resultBooking[i].status,
+                            });
+                            console.log(arr);
+                            res.write(arr);
+                          }
+                        }
+                      );
+                    }
+                  }
+                );
+              }
+            }
+          }
+        );
+      }
+    }
+  );
+});
+
+app.get("/api/getbookings", (req, res) => {
+  const username = req.query.username;
+  db.query(
+    "SELECT mobile_user_id FROM mobile_user WHERE user_name = ?",
+    [username],
+    (error, result) => {
+      if (error) {
+        console.log(error);
+      } else {
+        console.log(result[0].mobile_user_id);
+        let userId = result[0].mobile_user_id;
+        db.query(
+          "SELECT covidAssist.booking.booking_id, covidAssist.booking.center_id,covidAssist.booking.vaccine_id, covidAssist.vaccine.vaccine_name,covidAssist.vaccine_center.name, covidAssist.booking.date,covidAssist.booking.time, covidAssist.booking.dose,covidAssist.booking.status  From covidAssist.booking INNER JOIN covidAssist.vaccine ON covidAssist.booking.vaccine_id = covidAssist.vaccine.vaccine_id INNER JOIN covidAssist.vaccine_center ON covidAssist.booking.center_id = covidAssist.vaccine_center.center_id WHERE covidAssist.booking.mobile_user_id = ? AND covidAssist.booking.is_cancel = 0",
+          [userId],
+          (errorBooking, resultBooking) => {
+            if (errorBooking) {
+              console.log(errorBooking);
+            } else {
+              console.log(resultBooking);
+              res.send(resultBooking);
+            }
+          }
+        );
+      }
+    }
+  );
+});
+
+app.get('/api/cancelbooking',(req,res) => {
+  const bookingId = req.query.bookingId;
+  console.log(bookingId+"sssss");
+  db.query("UPDATE booking SET is_cancel = ? WHERE booking_id = ?",[1,bookingId],
+  (error,result)=>{
+    if(error){
+      console.log(error);
+    }else{
+      console.log(result);
+      res.send("updated")
+    }
+  })
+})
+
+app.get('/api/getnic',(req,res)=>{
+  const username = req.query.username;
+  db.query("SELECT nic FROM mobile_user WHERE user_name = ?",[username],
+  (error,result)=>{
+    if(error){
+      console.log(error);
+    }else{
+      console.log(result);
+      res.send(result);
+    }
+  })
+})
 
 app.listen(3000, () => {
   console.log("running on port 3000");
