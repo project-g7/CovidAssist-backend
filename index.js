@@ -6,7 +6,7 @@ const mysql = require("mysql");
 const crypto = require("crypto");
 
 const db = mysql.createPool({
-  host: "database-1.ctdegncxgy0s.us-east-2.rds.amazonaws.com",
+  host: "covid-assist-db.cdbjavxo0vob.us-east-2.rds.amazonaws.com",
   database: "covidAssist",
   user: "admin",
   password: "admin1234",
@@ -229,7 +229,7 @@ app.get("/api/VaccineCenterDistrict", (req, res) => {
               console.log(resultNic[0].district);
               let district = resultNic[0].district;
               db.query(
-                "SELECT covidAssist.vaccine_center.name ,covidAssist.vaccine.vaccine_name,covidAssist.vaccine_center.center_id FROM covidAssist.vaccine_center INNER JOIN covidAssist.vaccine_center_vaccine ON covidAssist.vaccine_center.center_id=covidAssist.vaccine_center_vaccine.vaccine_center_id  Inner JOIN covidAssist.vaccine ON covidAssist.vaccine_center_vaccine.vaccine_id=covidAssist.vaccine.vaccine_id WHERE covidAssist.vaccine_center.district=? AND (covidAssist.vaccine_center_vaccine.dose_1_quantity>0 OR covidAssist.vaccine_center_vaccine.dose_2_quantity>0 OR covidAssist.vaccine_center_vaccine.dose_3_quantity>0)",
+                "SELECT covidAssist.vaccine_center.name ,covidAssist.vaccine.vaccine_name,covidAssist.vaccine_center.center_id FROM covidAssist.vaccine_center INNER JOIN covidAssist.vaccine_center_vaccine ON covidAssist.vaccine_center.center_id=covidAssist.vaccine_center_vaccine.vaccine_center_id  Inner JOIN covidAssist.vaccine ON covidAssist.vaccine_center_vaccine.vaccine_id=covidAssist.vaccine.vaccine_id WHERE covidAssist.vaccine_center.district=? AND (covidAssist.vaccine_center_vaccine.dose_1_quantity>0 OR covidAssist.vaccine_center_vaccine.dose_2_quantity>0 OR covidAssist.vaccine_center_vaccine.dose_3_quantity>0) AND vaccine_center.end_date>=CURDATE()",
                 [district],
                 (errorDistrict, resultDistrict, fieldsDistrict) => {
                   if (errorDistrict) console.log(errorDistrict);
@@ -254,59 +254,70 @@ app.get("/api/VaccineSelecteDate", (req, res) => {
   const selecteddate = req.query.date;
   const selectedCenter = req.query.vaccineCenter;
   db.query(
-    "SELECT * FROM vaccine_center WHERE (start_date <= ? AND end_date >= ?) AND name=? ",
-    [selecteddate, selecteddate, selectedCenter],
+    "SELECT * FROM vaccine_center WHERE end_date >= ? AND name=? ",
+    [selecteddate, selectedCenter],
     (error, result, fields) => {
       if (error) {
         console.log(error);
         res.send("This Center is not available");
       } else {
         console.log(result);
-        db.query(
-          "SELECT center_id FROM vaccine_center WHERE name = ?",
-          [selectedCenter],
-          (errorCenter, resultCenter) => {
-            if (errorCenter) {
-              console.log(errorCenter);
-            } else {
-              console.log(resultCenter);
-              let center = resultCenter[0].center_id;
-              console.log(center);
-              db.query(
-                "SELECT `8.00-10.00` AS time1,`10.00-12.00`AS time2,`1.00-3.00`AS time3,`3.00-5.00`AS time4 FROM available_time WHERE date=? AND center_id =?",
-                [selecteddate, center],
-                (errorTime, resultTime, fieldsTime) => {
-                  if (error) {
-                    console.log(errorTime);
-                    res.send("Not available time");
-                  } else {
-                    console.log(resultTime);
-                    let c = 0;
-                    let arr = [];
-                    try {
-                      for (let [key, val] of Object.entries(resultTime[0])) {
-                        console.log(key, val);
-                        if (val <= 50) {
-                          c = c + 1;
+        if (result.length <= 0) {
+          console.log("123");
+          res.send({ value: "NoAvailbleCenter" });
+        } else {
+          console.log(result);
+          db.query(
+            "SELECT center_id FROM vaccine_center WHERE name = ?",
+            [selectedCenter],
+            (errorCenter, resultCenter) => {
+              if (errorCenter) {
+                console.log(errorCenter);
+              } else {
+                console.log(resultCenter);
+                let center = resultCenter[0].center_id;
+                console.log(center);
+                db.query(
+                  "SELECT `8.00-10.00`,`10.00-12.00`,`1.00-3.00`,`3.00-5.00` FROM available_time WHERE date=? AND center_id =?",
+                  [selecteddate, center],
+                  (errorTime, resultTime, fieldsTime) => {
+                    if (error) {
+                      console.log(errorTime);
+                      res.send("No available time");
+                    } else {
+                      console.log(resultTime);
+                      let c = 0;
+                      let arr = [];
+                      try {
+                        for (let [key, val] of Object.entries(resultTime[0])) {
+                          console.log(key, val);
+                          if (val <= 50) {
+                            c = c + 1;
+                          }
                         }
-                      }
-                      for (let [key, val] of Object.entries(resultTime[0])) {
-                        console.log(key, val);
-                        if (val < 50) {
-                          arr.push(key);
+                        for (let [key, val] of Object.entries(resultTime[0])) {
+                          console.log(key, val);
+                          if (val < 50) {
+                            arr.push(key);
+                          }
                         }
+                        if (arr.length <= 0) {
+                          console.log("!!!!!!!!!!!!!");
+                          res.send({ value: "NoAvailbleTimeSlot" });
+                        } else {
+                          console.log(arr);
+                          res.send(arr);
+                        }
+                      } catch (err) {
+                        console.log(err);
                       }
-                      console.log(arr);
-                      res.send(arr);
-                    } catch (err) {
-                      console.log(err);
                     }
                   }
-                }
-              );
+                );
+              }
             }
-          }
-        );
+          );
+        }
       }
     }
   );
@@ -315,6 +326,15 @@ app.get("/api/VaccineSelecteDate", (req, res) => {
 app.post("/api/VaccineRegister", (req, res) => {
   console.log("registervaccine");
   console.log(req.body.username);
+
+  const idType = req.body.idtype;
+  const doseT = req.body.selection;
+  const doseType = req.body.dosetype;
+
+  console.log(idType);
+  console.log(doseT);
+  console.log(doseType);
+
   console.log(req.body.vaccineCenter);
   // console.log(req.body.vaccineName);
   //console.log(req.body.vaccineCenter.vaccine_center);
@@ -322,11 +342,19 @@ app.post("/api/VaccineRegister", (req, res) => {
   const vaccineCenter = req.body.vaccineCenter;
   const vaccineName = req.body.vaccineName.vaccine_name;
   const username = req.body.username;
+  const timeSlot = req.body.selectTime;
+  const selectDate = req.body.date;
+
+  const status = 0;
+  console.log(timeSlot);
+  console.log(selectDate);
+
+  console.log("--------------------------");
   db.query(
     "SELECT mobile_user_id FROM mobile_user WHERE user_name=?",
     [username],
     (errorId, resultId, fieldsId) => {
-      if (errorId) console.log(error);
+      if (errorId) console.log(errorId);
       else {
         console.log(resultId[0].mobile_user_id);
         let userid = resultId[0].mobile_user_id;
@@ -347,14 +375,134 @@ app.post("/api/VaccineRegister", (req, res) => {
                     console.log(resultVaccineName[0].vaccine_id);
                     let vaccineid = resultVaccineName[0].vaccine_id;
                     const sqlInsert =
-                      "INSERT INTO booking (center_id,vaccine_id,mobile_user_id) VALUES(?,?,?)";
+                      "INSERT INTO booking (mobile_user_id,center_id,vaccine_id,date,time,status) VALUES(?,?,?,?,?,?)";
                     db.query(
                       sqlInsert,
-                      [centerid, vaccineid, userid],
-                      (err, result) => {
-                        res.send("Success");
-                        console.log(err);
-                        // res.send(result);
+                      [
+                        userid,
+                        centerid,
+                        vaccineid,
+                        selectDate,
+                        timeSlot,
+                        status,
+                      ],
+                      (errInsert, resultInsert) => {
+                        if (errInsert) console.log(errInsert);
+                        else {
+                          if (`8.00-10.00` == timeSlot) {
+                            console.log("can");
+                            db.query(
+                              "SELECT `8.00-10.00` AS time1 FROM available_time WHERE center_id=? AND date = ?",
+                              [centerid, selectDate],
+                              (errorTime1, resultTime1) => {
+                                if (errorTime1) console.log(error);
+                                else {
+                                  console.log(resultTime1[0].time1);
+                                  let firstTime = resultTime1[0].time1;
+                                  const sqlUpdate =
+                                    " UPDATE covidAssist.available_time SET `8.00-10.00`= 1 + ? WHERE center_id=? AND date = ?";
+                                  db.query(
+                                    sqlUpdate,
+                                    [firstTime, centerid, selectDate],
+                                    (errorTime1Update, resultTime1Update) => {
+                                      if (errorTime1Update) console.log(error);
+                                      else {
+                                        console.log(resultTime1Update);
+                                        console.log("time1 updated");
+                                        res.send("Success");
+                                        console.log(errorTime1Update);
+                                      }
+                                    }
+                                  );
+                                }
+                              }
+                            );
+                          } else if (`10.00-12.00` == timeSlot) {
+                            console.log("can10");
+                            db.query(
+                              "SELECT `10.00-12.00` AS time2 FROM available_time WHERE center_id=? AND date = ?",
+                              [centerid, selectDate],
+                              (errorTime2, resultTime2) => {
+                                if (errorTime2) console.log(error);
+                                else {
+                                  console.log(resultTime2[0].time2);
+                                  let secondTime = resultTime2[0].time2;
+                                  const sqlUpdate =
+                                    " UPDATE covidAssist.available_time SET `10.00-12.00`= 1 + ? WHERE center_id=? AND date = ?";
+                                  db.query(
+                                    sqlUpdate,
+                                    [secondTime, centerid, selectDate],
+                                    (errorTime2Update, resultTime2Update) => {
+                                      if (errorTime2Update) console.log(error);
+                                      else {
+                                        console.log(resultTime2Update);
+                                        console.log("time2 updated");
+                                        res.send("Success");
+                                        console.log(errorTime2Update);
+                                      }
+                                    }
+                                  );
+                                }
+                              }
+                            );
+                          } else if (`1.00-3.00` == timeSlot) {
+                            console.log("can1");
+                            db.query(
+                              "SELECT `1.00-3.00` AS time3 FROM available_time WHERE center_id=? AND date = ?",
+                              [centerid, selectDate],
+                              (errorTime3, resultTime3) => {
+                                if (errorTime3) console.log(error);
+                                else {
+                                  console.log(resultTime3[0].time3);
+                                  let thirdTime = resultTime3[0].time3;
+                                  const sqlUpdate =
+                                    " UPDATE covidAssist.available_time SET `1.00-3.00`= 1 + ? WHERE center_id=? AND date = ?";
+                                  db.query(
+                                    sqlUpdate,
+                                    [thirdTime, centerid, selectDate],
+                                    (errorTime3Update, resultTime3Update) => {
+                                      if (errorTime3Update) console.log(error);
+                                      else {
+                                        console.log(resultTime3Update);
+                                        console.log("time3 updated");
+                                        res.send("Success");
+                                        console.log(errorTime3Update);
+                                      }
+                                    }
+                                  );
+                                }
+                              }
+                            );
+                          } else if (`3.00-5.00` == timeSlot) {
+                            console.log("can4");
+                            db.query(
+                              "SELECT `3.00-5.00` AS time4 FROM available_time WHERE center_id=? AND date = ?",
+                              [centerid, selectDate],
+                              (errorTime4, resultTime4) => {
+                                if (errorTime4) console.log(error);
+                                else {
+                                  console.log(resultTime4[0].time4);
+                                  let fourthTime = resultTime4[0].time4;
+                                  const sqlUpdate =
+                                    " UPDATE covidAssist.available_time SET `3.00-5.00`= 1 + ? WHERE center_id=? AND date = ?";
+                                  db.query(
+                                    sqlUpdate,
+                                    [fourthTime, centerid, selectDate],
+                                    (errorTime4Update, resultTime4Update) => {
+                                      if (errorTime4Update) console.log(error);
+                                      else {
+                                        console.log(resultTime4Update);
+                                        console.log("time4 updated");
+                                        res.send("Success");
+                                        console.log(errorTime4Update);
+                                      }
+                                    }
+                                  );
+                                }
+                              }
+                            );
+                          }
+                        }
                       }
                     );
                   }
