@@ -330,10 +330,11 @@ app.post("/api/VaccineRegister", (req, res) => {
   const idType = req.body.idtype;
   const doseT = req.body.selection;
   const doseType = req.body.dosetype;
-
+console.log('====================================');
   console.log(idType);
   console.log(doseT);
   console.log(doseType);
+console.log('====================================');
 
   console.log(req.body.vaccineCenter);
   // console.log(req.body.vaccineName);
