@@ -31,7 +31,7 @@ app.post("/api/login", async (req, res) => {
     const hashpass = crypto.createHash("md5").update(password).digest("hex");
 
     db.query(
-      "SELECT password FROM mobile_user WHERE user_name=? AND password=?",
+      "SELECT password,tracing_key FROM mobile_user WHERE user_name=? AND password=?",
       [userName, hashpass],
       (error, result, feilds) => {
         console.log(result);
@@ -84,7 +84,20 @@ app.post("/api/insert", (req, res) => {
   const tracingKey = req.body.tracingKey;
   const contactTracingStatus = "0";
   const hash = crypto.createHash("md5").update(password).digest("hex");
+  let currentyear = Number(new Date().getFullYear());
+  console.log(currentyear);
+  if(nic.substring(0,1) == "1" || nic.substring(0,1) == "2"){
+    let birthyear = Number(nic.substring(0,4));
+    var age = currentyear - birthyear;
+    console.log("first"+age);
+  }else{
+    let last2digits = nic.substring(0,2);
+    let prefix = "19";
+    let birthyear = Number(prefix.concat(last2digits));
+    var age = currentyear - birthyear;
+    console.log("second"+age);
 
+  }
   db.query(
     "SELECT user_name FROM mobile_user WHERE user_name=?",
     [userName],
@@ -94,7 +107,7 @@ app.post("/api/insert", (req, res) => {
         res.send("wrong");
       } else {
         const sqlInsert =
-          "INSERT INTO mobile_user(first_name,last_name,nic,address,email,gender,contact_number,user_name,password,tracing_key,contact_tracing_status) VALUES(?,?,?,?,?,?,?,?,?,?,?)";
+          "INSERT INTO mobile_user(first_name,last_name,nic,address,email,gender,age,contact_number,user_name,password,tracing_key,contact_tracing_status) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)";
         db.query(
           sqlInsert,
           [
@@ -105,6 +118,7 @@ app.post("/api/insert", (req, res) => {
             address,
             email,
             gender,
+            age,
             contactNumber,
             userName,
             hash,
