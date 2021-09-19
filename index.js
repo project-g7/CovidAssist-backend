@@ -990,8 +990,8 @@ app.post("/api/forgotpass", (req, res) => {
       let mailDetails = {
         from: '"CovidAssist Admin" <g7titans@gmail.com>',
         to: email,
-        subject: "Rest Password",
-        text: `${link}`,
+        subject: "Rest Password Link",
+        text: `Click link to Confirm Password Reset- ${link}`,
       };
 
       mailTransporter.sendMail(mailDetails, function (err, data) {
