@@ -4,6 +4,9 @@ const cors = require("cors");
 const app = express();
 const mysql = require("mysql");
 const crypto = require("crypto");
+const jwt=require('jsonwebtoken');
+const JWT_SECRET="some super secret..."
+const nodemailer = require("nodemailer");
 
 const db = mysql.createPool({
   host: "covid-assist-db.cdbjavxo0vob.us-east-2.rds.amazonaws.com",
@@ -15,6 +18,7 @@ const db = mysql.createPool({
 app.use(cors());
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+app.set('view engine','ejs');
 
 app.get("/api/get", (req, res) => {
   const sqlSelect = "SELECT * FROM test_table";
@@ -947,7 +951,103 @@ app.get("/api/getnic", (req, res) => {
     }
   );
 });
+app.post("/api/forgotpass", (req, res) => {
+ 
+ 
+  const userName = req.body.userName;
+  const password2 = req.body.password2;
+  
+  db.query(
+    "SELECT email,password,mobile_user_id FROM mobile_user WHERE user_name=?",
+    [userName],
+    (error, result, feilds) => {
+      console.log(result);
+      if (result.length < 0) {
+        res.send("wrong");
+      } else {
+        let email = result[0].email;
+        let password=result[0].password;
+        let id=result[0].mobile_user_id;
+        console.log(email);
+       const secret=JWT_SECRET+password;
+       const payload={
+         email: email,
+         id: id,
+       }
+       const token=jwt.sign(payload,secret,{expiresIn:`20m`})
+       const link=`http://192.168.1.3:3001/api/reset-password/${id}/${token}/${password2}`
+       console.log(link);
+       res.send(email);
+       
+       let mailTransporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+          user: "g7titans@gmail.com",
+          pass: "titans@123",
+        },
+      });
 
-app.listen(3000, () => {
+      let mailDetails = {
+        from: '"CovidAssist Admin" <g7titans@gmail.com>',
+        to: email,
+        subject: "Rest Password",
+        text: `${link}`,
+      };
+
+      mailTransporter.sendMail(mailDetails, function (err, data) {
+        if (err) {
+          console.log("Error Occurs");
+          console.log(err);
+        } else {
+          console.log("Email sent successfully");
+        }
+      });
+      }
+    }
+  );
+});
+app.get("/api/reset-password/:id/:token/:password2", (req, res) => {
+  const{id,token,password2}=req.params;
+  const hashnew = crypto.createHash("md5").update(password2).digest("hex");
+  //  const secret=JWT_SECRET+password;
+   db.query(
+    "SELECT password FROM mobile_user WHERE mobile_user_id=?",
+    [id],
+    (error, result, feilds) => {
+      console.log(result);
+      if (result.length < 0) {
+        res.send("wrong");
+      } else {
+       
+        let password=result[0].password;
+        const secret=JWT_SECRET+password;
+        try{
+          const payload=jwt.verify(token,secret)
+          console.log("Got");
+          console.log(hashnew);
+          console.log(id);
+          db.query("UPDATE mobile_user SET password=? WHERE mobile_user_id=?",      
+          [hashnew,id],
+           (error, result) => {
+            if (error) {
+              res.send(error);
+            } else {
+              console.log(result);
+              res.send('Sucsessfully Changed');
+            }
+          });
+             }
+             catch(error){
+            console.log(error.message);
+            res.send(error.message);
+    }
+        
+       }
+    }
+  );
+ 
+ });
+
+app.listen(3001, () => {
   console.log("running on port 3000");
 });
