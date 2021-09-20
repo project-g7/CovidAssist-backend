@@ -975,7 +975,7 @@ app.post("/api/forgotpass", (req, res) => {
          id: id,
        }
        const token=jwt.sign(payload,secret,{expiresIn:`20m`})
-       const link=`http://192.168.1.3:3001/api/reset-password/${id}/${token}/${password2}`
+       const link=`http://192.168.1.3:3000/api/reset-password/${id}/${token}/${password2}`
        console.log(link);
        res.send(email);
        
@@ -1048,6 +1048,6 @@ app.get("/api/reset-password/:id/:token/:password2", (req, res) => {
  
  });
 
-app.listen(3001, () => {
+app.listen(3000, () => {
   console.log("running on port 3000");
 });
