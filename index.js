@@ -1047,6 +1047,23 @@ app.get("/api/reset-password/:id/:token/:password2", (req, res) => {
   );
  
  });
+ app.post("/api/dupnic", (req, res) => {
+  
+  const nic = req.body.nic;  
+   db.query(
+    "SELECT user_name FROM mobile_user WHERE nic=?",
+    [nic],
+    (error, result, feilds) => {
+      console.log(result);
+      if (result.length > 0) {
+        res.send("wrong");
+      } else {
+        res.send("Success");
+           
+      }
+    }
+  );
+});
 
 app.listen(3000, () => {
   console.log("running on port 3000");
